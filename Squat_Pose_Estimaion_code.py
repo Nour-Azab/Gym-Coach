@@ -6,7 +6,7 @@ import pandas as pd
 import math
 
 # ------------------ Setup ------------------
-VIDEO_PATH = r"C:\Users\Abdallah\Downloads\all_squat_videos\1e2c254b-0d5a-4fd6-a6d4-2681333d927b.mp4"
+VIDEO_PATH = r"C:\Users\Youss\OneDrive\Documents\DEPI\Final Project\all_squat_videos\6dddd176-2460-48cf-bd01-3eaaa0dc754f.mp4"
 
 OUTPUT_FOLDER = "pose_frames"
 CSV_FILE = "pose_landmarks.csv"
@@ -25,6 +25,9 @@ landmark_names = [lm.name for lm in mp_pose.PoseLandmark]
 
 # (x,y,visibility)
 header = ["frame"]
+header.append('video_name')
+header.append('rep_counter')
+
 for name in landmark_names:
     header.append(f"{name}_x")
     header.append(f"{name}_y")
@@ -56,11 +59,16 @@ def compute_angle_with_vertical(hip, knee):
     return angle
 
 # ------------------ Pose Estimation ------------------
+rep_counter = 0
+video_name = "vid_0"
 with mp_pose.Pose(
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5) as pose:
 
     frame_count = 0
+    prev_angle = None
+    prev_phase = None
+    phase = "s1"
 
     while cap.isOpened():
         success, frame = cap.read()
@@ -76,7 +84,8 @@ with mp_pose.Pose(
         results = pose.process(image_rgb)
 
         row = [frame_count]
-        phase = "Unknown"
+        row.append(video_name)
+        row.append(rep_counter)
 
         if results.pose_landmarks:
             # Draw skeleton
@@ -120,18 +129,34 @@ with mp_pose.Pose(
 
             print(f"  Hip-Knee Angle with Vertical: {angle}")
 
-            # Decide phase based on angle
             if angle is not None:
+                if prev_angle is None: # to initialize only the prev_angle for the first time
+                    prev_angle = angle
                 if angle <= 32:
-                    phase = "s1"
+                    if phase == "s4" and angle < prev_angle:   # checking if person is going up
+                        phase = "s5"
+                    elif phase == "s5" and angle > prev_angle: # checking if person is going down
+                        phase = "s1"
                 elif 32 < angle <= 75:
-                    phase = "s2"
-                elif 75 < angle <= 120:
+                    if phase == 's1':
+                        phase = "s2"
+                    elif phase == 's3':
+                        phase = "s4"
+                elif 75 < angle <= 120 and phase == 's2':
                     phase = "s3"
 
+            if prev_phase != phase:  # only check on phase change
+                if prev_phase == "s5" and phase == "s1":
+                    rep_counter += 1
+                    print(f"Rep completed! Total reps: {rep_counter}")
+
+            prev_phase = phase
+            prev_angle = angle
+
+
         else:
-            # if no pose detected → fill blanks
-            row.extend([""] * (len(header) - 2))
+            row.extend([""] * (len(header) - len(row)))  # fill until full length
+            row[-1] = phase  # last column is phase
 
         # Append phase
         row.append(phase)
