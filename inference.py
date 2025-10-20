@@ -13,7 +13,7 @@ SCALER_PATH = r"C:\Users\Youss\OneDrive\Documents\DEPI\Final Project\Gym-Coach\p
 
 WINDOW_SIZE = 30
 NUM_FEATURES = 74  # 22 landmarks × 3 (x,y,visibility) + 8 angles = 66 + 8 = 74
-ANOMALY_THRESHOLD = 0.05  # Adjust based on your trained model's threshold
+ANOMALY_THRESHOLD = 0.07  # Adjust based on your trained model's threshold
 
 
 def calculate_angle(a, b, c):
@@ -143,29 +143,40 @@ mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-# Use DirectShow backend for Windows (more reliable)
-cap = cv2.VideoCapture(VIDEO_PATH, cv2.CAP_DSHOW)
-
-if not cap.isOpened():
-    print(f"Error: Cannot open video source {VIDEO_PATH}")
-    print("Trying different camera indices...")
-    # Try other camera indices
-    for i in range(5):
-        cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
-        if cap.isOpened():
-            print(f"Successfully opened camera at index {i}")
-            VIDEO_PATH = i
-            break
+# Open video source (camera or video file)
+if isinstance(VIDEO_PATH, int):
+    # Camera mode - use DirectShow backend for Windows
+    print(f"Opening camera at index {VIDEO_PATH}...")
+    cap = cv2.VideoCapture(VIDEO_PATH, cv2.CAP_DSHOW)
+    
     if not cap.isOpened():
-        raise IOError(f"Cannot open any video source. Please check your camera connection.")
+        print(f"Error: Cannot open camera at index {VIDEO_PATH}")
+        print("Trying different camera indices...")
+        # Try other camera indices
+        for i in range(5):
+            cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
+            if cap.isOpened():
+                print(f"Successfully opened camera at index {i}")
+                VIDEO_PATH = i
+                break
+        if not cap.isOpened():
+            raise IOError(f"Cannot open any camera. Please check your camera connection.")
+else:
+    # Video file mode
+    print(f"Opening video file: {VIDEO_PATH}...")
+    cap = cv2.VideoCapture(VIDEO_PATH)
+    
+    if not cap.isOpened():
+        raise IOError(f"Cannot open video file: {VIDEO_PATH}. Please check the file path.")
 
-# Test if camera is working
+# Test if video source is working
 ret, test_frame = cap.read()
 if not ret or test_frame is None:
     cap.release()
-    raise IOError("Camera opened but cannot read frames. Please check camera permissions.")
+    raise IOError("Video source opened but cannot read frames.")
     
-print(f"Camera initialized successfully. Resolution: {test_frame.shape[1]}x{test_frame.shape[0]}")
+source_type = "Camera" if isinstance(VIDEO_PATH, int) else "Video"
+print(f"{source_type} initialized successfully. Resolution: {test_frame.shape[1]}x{test_frame.shape[0]}")
 
 # Buffers
 pose_data_buffer = []
