@@ -5,9 +5,9 @@ import csv
 import pandas as pd
 
 # ------------------ Setup ------------------
-VIDEO_PATH = r"C:\Users\Abdallah\Downloads\gettyimages-1476795398-640_adpp.mp4"
+VIDEO_PATH = r"D:\رواد\Lateral Raises\Untitled video - Made with Clipchamp.mp4"
 OUTPUT_FOLDER = r"D:\رواد\frames"
-CSV_FILE = r"D:\رواد\pose_landmarks.csv"
+CSV_FILE = r"D:\رواد\Lateral_raises_csv\pose_landmarks_28.csv"
 
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
