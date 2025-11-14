@@ -12,7 +12,7 @@ SCALER_PATH = r"C:\Users\Youss\Documents\DEPI\Final Project\Gym-Coach\pose_scale
 
 WINDOW_SIZE = 30
 NUM_FEATURES = 48  # Upper body: 12 landmarks × 3 (x,y,visibility) + 6 angles = 36 + 6
-ANOMALY_THRESHOLD = 1.18
+ANOMALY_THRESHOLD = 0.8
 
 # Utility Functions
 def calculate_angle(a, b, c):

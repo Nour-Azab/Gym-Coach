@@ -5,11 +5,11 @@ import csv
 import pandas as pd
 
 # ------------------ Setup ------------------
-VIDEO_PATH = r"D:\رواد\Lateral Raises\Untitled video - Made with Clipchamp.mp4"
-OUTPUT_FOLDER = r"D:\رواد\frames"
-CSV_FILE = r"D:\رواد\Lateral_raises_csv\pose_landmarks_28.csv"
+VIDEO_PATH = r"C:\Users\Youss\Documents\DEPI\Final Project\lateral_raise_vids\lr35.mp4"
+OUTPUT_FOLDER = r""
+CSV_FILE = r"C:\Users\Youss\Documents\DEPI\Final Project\pose_landmarks_tmp.csv"
 
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+# os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # Initialize MediaPipe Pose and Drawing utilities
 mp_pose = mp.solutions.pose
@@ -93,8 +93,8 @@ with mp_pose.Pose(
                         cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
 
         # Save frame
-        output_path = os.path.join(OUTPUT_FOLDER, f"frame_{frame_count:04d}.jpg")
-        cv2.imwrite(output_path, frame)
+        # output_path = os.path.join(OUTPUT_FOLDER, f"frame_{frame_count:04d}.jpg")
+        # cv2.imwrite(output_path, frame)
 
         # Resize for display
         display_frame = cv2.resize(frame, (800, 600))
