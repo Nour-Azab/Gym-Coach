@@ -7,8 +7,8 @@ import joblib
 
 # Configuration
 VIDEO_PATH = 0
-MODEL_PATH = r"D:\رواد\Lateral_Raises_code\lateral_raises_transformer_autoencoder.pth"
-SCALER_PATH = r"D:\رواد\Lateral_Raises_code\pose_scaler_lateral_raises.pkl"
+MODEL_PATH = r"C:\Users\Youss\Documents\DEPI\Final Project\Gym-Coach\lateral_raises_transformer_autoencoder.pth"
+SCALER_PATH = r"C:\Users\Youss\Documents\DEPI\Final Project\Gym-Coach\pose_scaler_lateral_raises.pkl"
 
 WINDOW_SIZE = 30
 NUM_FEATURES = 48  # Upper body: 12 landmarks × 3 (x,y,visibility) + 6 angles = 36 + 6
