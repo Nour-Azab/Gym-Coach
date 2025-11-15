@@ -7,12 +7,12 @@ import joblib
 
 # Configuration
 VIDEO_PATH = 0
-MODEL_PATH = r"C:\Users\Youss\Documents\DEPI\Final Project\Gym-Coach\lateral_raises_transformer_autoencoder.pth"
-SCALER_PATH = r"C:\Users\Youss\Documents\DEPI\Final Project\Gym-Coach\pose_scaler_lateral_raises.pkl"
+MODEL_PATH = r"D:\رواد\Lateral_Raises_code\Gym-Coach-Lateral_Raises\lateral_raises_transformer_autoencoder.pth"
+SCALER_PATH = r"D:\رواد\Lateral_Raises_code\Gym-Coach-Lateral_Raises\pose_scaler_lateral_raises.pkl"
 
 WINDOW_SIZE = 30
-NUM_FEATURES = 48  # Upper body: 12 landmarks × 3 (x,y,visibility) + 6 angles = 36 + 6
-ANOMALY_THRESHOLD = 0.8
+NUM_FEATURES = 54  # Upper body: 14 landmarks × 3 (x,y,visibility) + 14 angles = 42 + 12
+ANOMALY_THRESHOLD = 0.815
 
 # Utility Functions
 def calculate_angle(a, b, c):
@@ -28,48 +28,63 @@ def calculate_angle(a, b, c):
 
 
 def extract_angles_from_landmarks(landmarks_dict):
-    """Calculate pose angles for lateral raises."""
-    left_shoulder_angle = calculate_angle(
-        [landmarks_dict['LEFT_ELBOW_x'], landmarks_dict['LEFT_ELBOW_y']],
-        [landmarks_dict['LEFT_SHOULDER_x'], landmarks_dict['LEFT_SHOULDER_y']],
-        [landmarks_dict['LEFT_HIP_x'], landmarks_dict['LEFT_HIP_y']]
-    )
-    
-    right_shoulder_angle = calculate_angle(
-        [landmarks_dict['RIGHT_ELBOW_x'], landmarks_dict['RIGHT_ELBOW_y']],
-        [landmarks_dict['RIGHT_SHOULDER_x'], landmarks_dict['RIGHT_SHOULDER_y']],
-        [landmarks_dict['RIGHT_HIP_x'], landmarks_dict['RIGHT_HIP_y']]
-    )
-    
-    left_elbow_angle = calculate_angle(
-        [landmarks_dict['LEFT_SHOULDER_x'], landmarks_dict['LEFT_SHOULDER_y']],
-        [landmarks_dict['LEFT_ELBOW_x'], landmarks_dict['LEFT_ELBOW_y']],
-        [landmarks_dict['LEFT_WRIST_x'], landmarks_dict['LEFT_WRIST_y']]
-    )
-    
-    right_elbow_angle = calculate_angle(
-        [landmarks_dict['RIGHT_SHOULDER_x'], landmarks_dict['RIGHT_SHOULDER_y']],
-        [landmarks_dict['RIGHT_ELBOW_x'], landmarks_dict['RIGHT_ELBOW_y']],
-        [landmarks_dict['RIGHT_WRIST_x'], landmarks_dict['RIGHT_WRIST_y']]
-    )
-    
-    left_hip_vertical = [landmarks_dict['LEFT_HIP_x'], landmarks_dict['LEFT_HIP_y'] + 1]
-    left_torso_angle = calculate_angle(
-        [landmarks_dict['LEFT_SHOULDER_x'], landmarks_dict['LEFT_SHOULDER_y']],
-        [landmarks_dict['LEFT_HIP_x'], landmarks_dict['LEFT_HIP_y']],
-        left_hip_vertical
-    )
-    
-    right_hip_vertical = [landmarks_dict['RIGHT_HIP_x'], landmarks_dict['RIGHT_HIP_y'] + 1]
-    right_torso_angle = calculate_angle(
-        [landmarks_dict['RIGHT_SHOULDER_x'], landmarks_dict['RIGHT_SHOULDER_y']],
-        [landmarks_dict['RIGHT_HIP_x'], landmarks_dict['RIGHT_HIP_y']],
-        right_hip_vertical
-    )
-    
-    return [left_shoulder_angle, right_shoulder_angle, 
-            left_elbow_angle, right_elbow_angle, 
-            left_torso_angle, right_torso_angle]
+    # --- Left landmarks ---
+    left_shoulder = [landmarks_dict['LEFT_SHOULDER_x'], landmarks_dict['LEFT_SHOULDER_y']]
+    left_elbow = [landmarks_dict['LEFT_ELBOW_x'], landmarks_dict['LEFT_ELBOW_y']]
+    left_wrist = [landmarks_dict['LEFT_WRIST_x'], landmarks_dict['LEFT_WRIST_y']]
+    left_hip = [landmarks_dict['LEFT_HIP_x'], landmarks_dict['LEFT_HIP_y']]
+
+    # --- Right landmarks ---
+    right_shoulder = [landmarks_dict['RIGHT_SHOULDER_x'], landmarks_dict['RIGHT_SHOULDER_y']]
+    right_elbow = [landmarks_dict['RIGHT_ELBOW_x'], landmarks_dict['RIGHT_ELBOW_y']]
+    right_wrist = [landmarks_dict['RIGHT_WRIST_x'], landmarks_dict['RIGHT_WRIST_y']]
+    right_hip = [landmarks_dict['RIGHT_HIP_x'], landmarks_dict['RIGHT_HIP_y']]
+
+    # --- Shoulder Angles (Arm Abduction) ---
+    left_shoulder_angle = calculate_angle(left_elbow, left_shoulder, left_hip)
+    right_shoulder_angle = calculate_angle(right_elbow, right_shoulder, right_hip)
+
+    # --- Elbow Angles (Flexion/Extension) ---
+    left_elbow_angle = calculate_angle(left_shoulder, left_elbow, left_wrist)
+    right_elbow_angle = calculate_angle(right_shoulder, right_elbow, right_wrist)
+
+    # --- Torso Lean Angles ---
+    left_hip_vertical = [left_hip[0], left_hip[1] + 1]
+    right_hip_vertical = [right_hip[0], right_hip[1] + 1]
+
+    left_torso_angle = calculate_angle(left_shoulder, left_hip, left_hip_vertical)
+    right_torso_angle = calculate_angle(right_shoulder, right_hip, right_hip_vertical)
+
+    # --- Shoulder Elevation (shrugging detection) ---
+    left_shoulder_elevation = left_shoulder[1] - left_hip[1]
+    right_shoulder_elevation = right_shoulder[1] - right_hip[1]
+
+    # --- Wrist Alignment Angles ---
+    left_wrist_horizontal = [left_wrist[0] + 1, left_wrist[1]]
+    right_wrist_horizontal = [right_wrist[0] + 1, right_wrist[1]]
+
+    left_wrist_angle = calculate_angle(left_elbow, left_wrist, left_wrist_horizontal)
+    right_wrist_angle = calculate_angle(right_elbow, right_wrist, right_wrist_horizontal)
+
+    # --- Arm Drift (forward/backward) ---
+    left_arm_drift = left_elbow[0] - left_shoulder[0]
+    right_arm_drift = right_elbow[0] - right_shoulder[0]
+
+    return [
+        left_shoulder_angle,
+        right_shoulder_angle,
+        left_elbow_angle,
+        right_elbow_angle,
+        left_torso_angle,
+        right_torso_angle,
+        left_shoulder_elevation,
+        right_shoulder_elevation,
+        left_wrist_angle,
+        right_wrist_angle,
+        left_arm_drift,
+        right_arm_drift
+    ]
+
 
 
 def draw_angle_visualization(frame, landmarks_dict, h, w):
