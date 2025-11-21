@@ -8,12 +8,12 @@ import joblib
 
 # Configuration
 VIDEO_PATH = 0  # Use 0 for webcam or provide video path
-MODEL_PATH = r"C:\Users\Youss\OneDrive\Documents\DEPI\Final Project\Gym-Coach\transformer_autoencoder.pth"
-SCALER_PATH = r"C:\Users\Youss\OneDrive\Documents\DEPI\Final Project\Gym-Coach\pose_scaler.pkl"
+MODEL_PATH = r"squat_transformer_autoencoder.pth"
+SCALER_PATH = r"pose_scaler.pkl"
 
 WINDOW_SIZE = 30
-NUM_FEATURES = 74  # 22 landmarks × 3 (x,y,visibility) + 8 angles = 66 + 8 = 74
-ANOMALY_THRESHOLD = 0.07  # Adjust based on your trained model's threshold
+NUM_FEATURES = 44  # 12 landmarks × 3 (x,y,visibility) + 8 angles = 36 + 8 = 44
+Anamoly_Threshold = 0.06  # Adjust based on your trained model's threshold
 
 
 def calculate_angle(a, b, c):
@@ -110,18 +110,14 @@ class TransformerAutoencoder(nn.Module):
 
 # MediaPipe landmark indices mapping
 LANDMARK_NAMES = [
-    'LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_ELBOW', 'RIGHT_ELBOW',
-    'LEFT_WRIST', 'RIGHT_WRIST', 'LEFT_PINKY', 'RIGHT_PINKY',
-    'LEFT_INDEX', 'RIGHT_INDEX', 'LEFT_THUMB', 'RIGHT_THUMB',
+    'LEFT_SHOULDER', 'RIGHT_SHOULDER',
     'LEFT_HIP', 'RIGHT_HIP', 'LEFT_KNEE', 'RIGHT_KNEE',
     'LEFT_ANKLE', 'RIGHT_ANKLE', 'LEFT_HEEL', 'RIGHT_HEEL',
     'LEFT_FOOT_INDEX', 'RIGHT_FOOT_INDEX'
 ]
 
 LANDMARK_INDICES = {
-    'LEFT_SHOULDER': 11, 'RIGHT_SHOULDER': 12, 'LEFT_ELBOW': 13, 'RIGHT_ELBOW': 14,
-    'LEFT_WRIST': 15, 'RIGHT_WRIST': 16, 'LEFT_PINKY': 17, 'RIGHT_PINKY': 18,
-    'LEFT_INDEX': 19, 'RIGHT_INDEX': 20, 'LEFT_THUMB': 21, 'RIGHT_THUMB': 22,
+    'LEFT_SHOULDER': 11, 'RIGHT_SHOULDER': 12,
     'LEFT_HIP': 23, 'RIGHT_HIP': 24, 'LEFT_KNEE': 25, 'RIGHT_KNEE': 26,
     'LEFT_ANKLE': 27, 'RIGHT_ANKLE': 28, 'LEFT_HEEL': 29, 'RIGHT_HEEL': 30,
     'LEFT_FOOT_INDEX': 31, 'RIGHT_FOOT_INDEX': 32
@@ -187,6 +183,10 @@ status_color = (255, 255, 255)  # White for initial state
 
 print("Starting inference... Press 'q' to quit")
 
+rep_counter = 0
+prev_angle = None
+prev_phase = None
+phase = "S1"
 while True:
     success, frame = cap.read()
     if not success or frame is None:
@@ -229,7 +229,37 @@ while True:
         angles = extract_angles_from_landmarks(landmarks_dict)
         feature_vector.extend(angles)
 
-        # Total: 66 + 8 = 74 features (adjust if your NUM_FEATURES is different)
+        if landmarks_dict['LEFT_KNEE_visibility'] > landmarks_dict['RIGHT_KNEE_visibility']:
+            angle = angles[0]
+            Anamoly_Threshold = 0.065
+        else:
+            angle = angles[1]
+            Anamoly_Threshold = 0.045
+
+        
+        if angle is not None:
+                if prev_angle is None:
+                    prev_angle = angle
+
+                if angle > 160 and prev_angle <= 160:
+                    phase = "S1"  # stand
+                elif angle <= 90:
+                    phase = "S3"  # bottom
+                elif angle < prev_angle and angle <= 160 and angle > 90:
+                    phase = "S2"  # going down
+                elif angle > prev_angle and angle <= 160 and angle > 90:
+                    phase = "S4"  # going up
+                # Rep detection (bottom → stand)
+                if prev_phase == "S4" and phase == "S1":
+                    if viable_rep:
+                        rep_counter += 1
+                        print(f"Rep completed! Total reps: {rep_counter}")
+                    viable_rep = True
+
+                prev_phase = phase
+                prev_angle = angle
+
+        # Total: 36 + 8 = 44 features (adjust if your NUM_FEATURES is different)
         if len(feature_vector) == NUM_FEATURES:
             pose_data_buffer.append(feature_vector)
         else:
@@ -249,7 +279,8 @@ while True:
             reconstruction_error = torch.mean((window_tensor - recon_out) ** 2).item()
             
             # Determine form status
-            if reconstruction_error > ANOMALY_THRESHOLD:
+            if reconstruction_error > Anamoly_Threshold:
+                viable_rep = False
                 form_status = "ANOMALY DETECTED!"
                 status_color = (0, 0, 255)  # Red
             else:
@@ -257,16 +288,19 @@ while True:
                 status_color = (0, 255, 0)  # Green
 
     # Display information
-    cv2.rectangle(frame, (5, 5), (400, 110), (0, 0, 0), -1)
+    cv2.rectangle(frame, (4, 4), (400, 100), (0, 0, 0), -1)
     
-    cv2.putText(frame, f"Frame: {frame_count}", (10, 30),
+    cv2.putText(frame, f"Frame: {frame_count}", (10, 20),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
     
-    cv2.putText(frame, f"Recon Error: {reconstruction_error:.6f}", (10, 60),
+    cv2.putText(frame, f"Recon Error: {reconstruction_error:.6f}", (10, 40),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
     
-    cv2.putText(frame, f"Status: {form_status}", (10, 90),
+    cv2.putText(frame, f"Status: {form_status}", (10, 60),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, status_color, 2)
+    
+    cv2.putText(frame, f"Rep Counter: {rep_counter}", (10, 80),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
     cv2.imshow("Squat Form Analysis - Autoencoder", frame)
     
@@ -279,4 +313,3 @@ pose.close()
 
 print(f"\nInference complete. Processed {frame_count} frames.")
 print(f"Final reconstruction error: {reconstruction_error:.6f}")
-print(f"Anomaly threshold: {ANOMALY_THRESHOLD}")
