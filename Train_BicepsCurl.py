@@ -66,6 +66,7 @@ def add_biceps_curl_angles(df):
 
         # Compute angles for active arm only
         if active_arm == "left":
+            df_active = df[['']]
             elbow_flexion_angle.append(calculate_angle(left_shoulder, left_elbow, left_wrist))
             torso_lean_angle.append(calculate_angle(left_hip, left_shoulder, vertical_point_left) if left_hip[0] else 0.0)
             upper_arm_torso_angle.append(calculate_angle(left_hip, left_shoulder, left_elbow) if left_hip[0] else 0.0)
@@ -83,15 +84,14 @@ def add_biceps_curl_angles(df):
             forearm_vertical_angle.append(calculate_angle(vertical_point_right, right_elbow, right_wrist))
 
     # Add only active arm columns
-    df_active = df[['frame', 'video_name']].copy()
-    df_active['active_arm'] = active_arms
-    df_active['elbow_flexion_angle'] = elbow_flexion_angle
-    df_active['torso_lean_angle'] = torso_lean_angle
-    df_active['upper_arm_torso_angle'] = upper_arm_torso_angle
-    df_active['wrist_angle'] = wrist_angle
-    df_active['forearm_vertical_angle'] = forearm_vertical_angle
+    df['active_arm'] = active_arms
+    df['elbow_flexion_angle'] = elbow_flexion_angle
+    df['torso_lean_angle'] = torso_lean_angle
+    df['upper_arm_torso_angle'] = upper_arm_torso_angle
+    df['wrist_angle'] = wrist_angle
+    df['forearm_vertical_angle'] = forearm_vertical_angle
 
-    return df_active
+    return df
 
 
     # Load and preprocess data
@@ -135,6 +135,9 @@ columns_to_drop = [
 # Only drop columns that exist in the dataframe
 existing_columns_to_drop = [col for col in columns_to_drop if col in df.columns]
 df.drop(columns=existing_columns_to_drop, inplace=True)
+
+df = add_biceps_curl_angles(df)
+df = df.sort_values(by=["video_name", "frame"]).reset_index(drop=True)
 
 print(f"Dropped {len(existing_columns_to_drop)} columns (face + lower body)")
 print(f"Shape after dropping: {df.shape}")

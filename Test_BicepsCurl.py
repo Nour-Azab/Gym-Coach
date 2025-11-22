@@ -50,8 +50,20 @@ class TransformerAutoencoder(nn.Module):
         recon_out = self.output_proj(reconstructed)
         return recon_out
 
-# --- 2. NEW FUNCTION FOR LIVE LANDMARK PROCESSING ---
 
+LANDMARK_NAMES = [
+    'LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_ELBOW', 'RIGHT_ELBOW',
+    'LEFT_WRIST', 'RIGHT_WRIST', 'LEFT_PINKY', 'RIGHT_PINKY',
+    'LEFT_INDEX', 'RIGHT_INDEX', 'LEFT_THUMB', 'RIGHT_THUMB',
+    'LEFT_HIP', 'RIGHT_HIP'
+]
+
+LANDMARK_INDICES = {
+    'LEFT_SHOULDER': 11, 'RIGHT_SHOULDER': 12, 'LEFT_ELBOW': 13, 'RIGHT_ELBOW': 14,
+    'LEFT_WRIST': 15, 'RIGHT_WRIST': 16, 'LEFT_PINKY': 17, 'RIGHT_PINKY': 18,
+    'LEFT_INDEX': 19, 'RIGHT_INDEX': 20, 'LEFT_THUMB': 21, 'RIGHT_THUMB': 22,
+    'LEFT_HIP': 23, 'RIGHT_HIP': 24
+}
 
 def process_landmarks_to_angles(landmarks, img_width, img_height):
 
@@ -121,11 +133,9 @@ def process_landmarks_to_angles(landmarks, img_width, img_height):
         return None
 
 
-# --- 3. MAIN INFERENCE SCRIPT ---
 
-
-MODEL_PATH = r"C:\Users\LENOVO\Desktop\gym\best_transformer_autoencoder_biceps22.pth"
-SCALER_PATH = r"C:\Users\LENOVO\Desktop\gym\pose_scaler_biceps22.pkl"
+MODEL_PATH = r"best_transformer_autoencoder_biceps.pth"
+SCALER_PATH = r"pose_scaler_biceps.pkl"
 
 SEQ_LEN = 30
 NUM_FEATURES = 5 # elbow_flexion, torso_lean, upper_arm_torso, wrist, forearm_vertical
@@ -134,7 +144,7 @@ NHEAD = 8
 NUM_LAYERS = 6
 
 
-ANOMALY_THRESHOLD = 0.02 
+ANOMALY_THRESHOLD = 0.0002 
 
 # --- Load Model and Scaler ---
 print("Loading model and scaler...")
@@ -210,6 +220,11 @@ while cap.isOpened():
         # --- Our Custom Logic ---
         # 1. Calculate angles
         angles = process_landmarks_to_angles(results.pose_landmarks, img_width, img_height)
+
+        if landmarks_dict['LEFT_ELBOW_visibility'] > landmarks_dict['RIGHT_ELBOW_visibility']:
+            angle = angles[0]
+        else:
+            angle = angles[1]
 
         if angles is not None:
             # 2. Scale the angles
