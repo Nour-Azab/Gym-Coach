@@ -7,8 +7,8 @@ import joblib
 
 # Configuration
 VIDEO_PATH = 0
-MODEL_PATH = r"D:\رواد\Lateral_Raises_code\Gym-Coach-Lateral_Raises\lateral_raises_transformer_autoencoder.pth"
-SCALER_PATH = r"D:\رواد\Lateral_Raises_code\Gym-Coach-Lateral_Raises\pose_scaler_lateral_raises.pkl"
+MODEL_PATH = r"lateral_raises_transformer_autoencoder.pth"
+SCALER_PATH = r"pose_scaler_lateral_raises.pkl"
 
 WINDOW_SIZE = 30
 NUM_FEATURES = 54  # Upper body: 14 landmarks × 3 (x,y,visibility) + 14 angles = 42 + 12
@@ -217,6 +217,12 @@ status_color = (255, 255, 255)
 show_angles = False
 pose_detected = False
 
+rep_counter = 0
+prev_angle = None
+prev_phase = None
+phase = "S1"
+viable_rep = True
+
 while True:
     success, frame = cap.read()
     if not success:
@@ -263,6 +269,31 @@ while True:
         angles = extract_angles_from_landmarks(landmarks_dict)
         feature_vector.extend(angles)
 
+        angle = (angles[0] + angles[1])/2
+        
+        if angle is not None:
+                if prev_angle is None:
+                    prev_angle = angle
+
+                if angle <= 30 and prev_angle > 30:
+                    phase = "LR1"  # Rest
+                elif angle >= 75:
+                    phase = "LR3"  # Top
+                elif angle > prev_angle and angle < 75 and angle > 30:
+                    phase = "LR2"  # going up
+                elif angle < prev_angle and angle < 75 and angle > 30:
+                    phase = "LR4"  # going down
+                # Rep detection (Top → Rest)
+                if prev_phase == "LR4" and phase == "LR1":
+                    if viable_rep:
+                        rep_counter += 1
+                        print(f"Rep completed! Total reps: {rep_counter}")
+                    viable_rep = True
+
+                prev_phase = phase
+                prev_angle = angle
+
+
         if len(feature_vector) == NUM_FEATURES:
             pose_data_buffer.append(feature_vector)
         else:
@@ -288,7 +319,12 @@ while True:
                     form_status = "No Pose Detected"
                     status_color = (0, 165, 255)
                 elif reconstruction_error > ANOMALY_THRESHOLD:
+                    viable_rep = False
                     form_status = "POOR FORM!"
+                    status_color = (0, 0, 255)
+                elif angle >= 100:
+                    viable_rep = False
+                    form_status = "Only lift to shoulder height!"
                     status_color = (0, 0, 255)
                 else:
                     form_status = "Good Form"
@@ -300,10 +336,10 @@ while True:
 
     # Display UI
     overlay = frame.copy()
-    cv2.rectangle(overlay, (5, 5), (480, 150), (0, 0, 0), -1)
+    cv2.rectangle(overlay, (5, 5), (300, 150), (0, 0, 0), -1)
     cv2.addWeighted(overlay, 0.7, frame, 0.3, 0, frame)
 
-    cv2.putText(frame, "LATERAL RAISES ANALYZER", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (100, 200, 255), 2)
+    cv2.putText(frame, f"Correct Reps: {rep_counter}", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (100, 200, 255), 2)
     
     cv2.putText(frame, f"Frame: {frame_count} | Buffer: {len(pose_data_buffer)}/{WINDOW_SIZE}", (10, 60),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
     
