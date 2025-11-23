@@ -228,16 +228,6 @@ def analyze_frame(frame, model, scaler, threshold, device, buffer, window_size, 
                 landmarks_dict['LEFT_WRIST_y'] < landmarks_dict['LEFT_ELBOW_y']):
                 rep_state['viable_rep'] = False
                 status = "Wrist higher than elbow!"
-        # Check elbow angle when arms are raised
-        elif angle > 30:
-            if angles[2] > 170 or angles[3] > 170:
-                rep_state['viable_rep'] = False
-                status = "Slightly bend elbows!"
-            elif angles[2] < 140 or angles[3] < 140:
-                rep_state['viable_rep'] = False
-                status = "Arms bent too much!"
-            else:
-                status = "Good Form"
         else:
             status = "Good Form"
 
