@@ -245,7 +245,7 @@ def analyze_frame(frame, model, scaler, threshold, device, buffer, window_size, 
 
         # Determine form status based on reconstruction error and ROM errors
         if rep_state['Top_ROM_error']:
-            status = "Extend arms fully!"
+            status = "Go up more!"
         elif rep_state['Bottom_ROM_error']:
             status = "Go down more!"
         elif err > threshold:
