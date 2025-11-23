@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+from regex import B, F
 import torch
 import torch.nn as nn
 import joblib
@@ -222,6 +223,8 @@ prev_angle = None
 prev_phase = None
 phase = "LR1"
 viable_rep = True
+Top_ROM_error = False
+Bottom_ROM_error = False
 
 while True:
     success, frame = cap.read()
@@ -276,6 +279,8 @@ while True:
                     prev_angle = angle
 
                 if angle <= 30 and prev_angle > 30:
+                    Top_ROM_error = False
+                    Bottom_ROM_error = False
                     phase = "LR1"  # Rest
                 elif angle >= 75:
                     phase = "LR3"  # Top
@@ -283,6 +288,19 @@ while True:
                     phase = "LR2"  # going up
                 elif angle < prev_angle and angle < 75 and angle > 30:
                     phase = "LR4"  # going down
+
+                #Range of Motion Checks
+
+                #1) Check for incomplete bottom extension
+                if prev_angle is not None:
+                    if phase == "LR4" and  prev_phase == "LR2":
+                        viable_rep = False
+                        Bottom_ROM_error = True
+
+                # 2) Check for weak contraction at the top
+                if phase == "LR2" and  prev_phase == "LR4":
+                    viable_rep = False
+                    Top_ROM_error = True
                 # Rep detection (Top → Rest)
                 if prev_phase == "LR4" and phase == "LR1":
                     if viable_rep:
@@ -321,6 +339,12 @@ while True:
                 elif reconstruction_error > ANOMALY_THRESHOLD:
                     viable_rep = False
                     form_status = "POOR FORM!"
+                    status_color = (0, 0, 255)
+                elif Top_ROM_error:
+                    form_status = "Raise Elbow!"
+                    status_color = (0, 0, 255)
+                elif Bottom_ROM_error:
+                    form_status = "Relax arms at the end!"
                     status_color = (0, 0, 255)
                 elif angle > 45:
                     if landmarks_dict['RIGHT_WRIST_y'] < landmarks_dict['RIGHT_ELBOW_y'] or landmarks_dict['LEFT_WRIST_y'] < landmarks_dict['LEFT_ELBOW_y']:
