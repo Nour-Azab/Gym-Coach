@@ -322,10 +322,24 @@ while True:
                     viable_rep = False
                     form_status = "POOR FORM!"
                     status_color = (0, 0, 255)
-                elif angle >= 100:
-                    viable_rep = False
-                    form_status = "Only lift to shoulder height!"
-                    status_color = (0, 0, 255)
+                elif angle > 45:
+                    if landmarks_dict['RIGHT_WRIST_y'] < landmarks_dict['RIGHT_ELBOW_y'] or landmarks_dict['LEFT_WRIST_y'] < landmarks_dict['LEFT_ELBOW_y']:
+                        viable_rep = False
+                        form_status = "Wrist higher than elbow!"
+                        status_color = (0, 0, 255)
+                elif angle > 30:
+                    if angles[2] > 170 or angles[3] > 170:
+                        viable_rep = False
+                        form_status = "Slightly bend elbow"
+                        status_color = (0, 0, 255)
+                    elif angles[2] < 140 or angles[3] < 140:
+                        viable_rep = False
+                        form_status = "Arms bent too much"
+                        status_color = (0, 0, 255)
+                #elif angle >= 100:
+                 #   viable_rep = False
+                 #   form_status = "Only lift to shoulder height!" # wrist condiion already activates for this test
+                  #  status_color = (0, 0, 255)
                 else:
                     form_status = "Good Form"
                     status_color = (0, 255, 0)
