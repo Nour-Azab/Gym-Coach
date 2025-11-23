@@ -73,13 +73,13 @@ def extract_angles_from_landmarks(landmarks_dict):
         knee_angles=calculate_angle(left_hip, left_knee, left_ankle) # knee tmm
         hip_angles=calculate_angle(left_shoulder, left_hip, left_knee)
         torso_angles=calculate_angle(left_shoulder, left_hip, vertical_point_left)
-        ankle_angles=calculate_angle(left_hip, left_ankle, left_foot_index)
+        ankle_angles=calculate_angle(left_knee, left_ankle, left_foot_index)
 
     else:
         knee_angles=calculate_angle(right_hip, right_knee, right_ankle) # knee tmm
         hip_angles=calculate_angle(right_shoulder, right_hip, right_knee)
         torso_angles=calculate_angle(right_shoulder, right_hip, vertical_point_right)
-        ankle_angles=calculate_angle(right_hip, right_ankle, right_foot_index)
+        ankle_angles=calculate_angle(right_knee, right_ankle, right_foot_index)
         
 
   
@@ -239,6 +239,9 @@ rep_counter = 0
 prev_angle = None
 prev_phase = None
 phase = "S1"
+viable_rep = True
+Bottom_ROM_error = False
+
 while True:
     success, frame = cap.read()
     if not success or frame is None:
@@ -293,7 +296,7 @@ while True:
             ])
 
      
-        Anamoly_Threshold = 0.045
+        Anamoly_Threshold = 0.032
         angle=angles[1]
         
         if angle is not None:
@@ -301,6 +304,7 @@ while True:
                     prev_angle = angle
 
                 if angle > 160 and prev_angle <= 160:
+                    Bottom_ROM_error = False
                     phase = "S1"  # stand
                 elif angle <= 90:
                     phase = "S3"  # bottom
@@ -308,6 +312,13 @@ while True:
                     phase = "S2"  # going down
                 elif angle > prev_angle and angle <= 160 and angle > 90:
                     phase = "S4"  # going up
+
+                #Range of Motion Checks
+                # Check for not deep enough rep
+                if prev_angle is not None:
+                    if phase == "S2" and prev_phase == "S4":
+                        viable_rep = False
+                        Bottom_ROM_error = True
                 # Rep detection (bottom → stand)
                 if prev_phase == "S4" and phase == "S1":
                     if viable_rep:
@@ -340,8 +351,20 @@ while True:
             # Determine form status
             if reconstruction_error > Anamoly_Threshold:
                 viable_rep = False
-                form_status = "ANOMALY DETECTED!"
+                form_status = "Bad Form!"
                 status_color = (0, 0, 255)  # Red
+            elif Bottom_ROM_error:
+                form_status = "Not Going Low Enough!"
+                status_color = (0, 0, 255) 
+            elif angle < 160:
+                if angles[4] > 125:
+                    viable_rep = False
+                    form_status = "Don't Lift Your Heels!"
+                    status_color = (0, 0, 255) 
+                elif angles[3] > 50:
+                    viable_rep = False
+                    form_status = "Don't Arch Your Back!"
+                    status_color = (0, 0, 255) 
             else:
                 form_status = "Normal Form"
                 status_color = (0, 255, 0)  # Green
