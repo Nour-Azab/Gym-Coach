@@ -23,7 +23,7 @@ SCALER_PATH = r"pose_scaler_pushups.pkl"
 
 WINDOW_SIZE = 30
 NUM_FEATURES = 40   # 11*3 +7(angles)
-ANOMALY_THRESHOLD = 0.017
+ANOMALY_THRESHOLD = 0.11
 
 # Utility Functions
 def calculate_angle(a, b, c):
@@ -251,8 +251,10 @@ pose_detected = False
 rep_counter = 0
 prev_angle = None
 prev_phase = None
-phase = "S1"
+phase = "P1"
 viable_rep = True
+Top_ROM_error = False
+Bottom_ROM_error = False
 
 while True:
     success, frame = cap.read()
@@ -319,16 +321,31 @@ while True:
                 if prev_angle is None:
                     prev_angle = angle
 
-                if angle <= 30 and prev_angle > 30:
-                    phase = "LR1"  # Rest
-                elif angle >= 75:
-                    phase = "LR3"  # Top
-                elif angle > prev_angle and angle < 75 and angle > 30:
-                    phase = "LR2"  # going up
-                elif angle < prev_angle and angle < 75 and angle > 30:
-                    phase = "LR4"  # going down
+                if angle >= 150 and prev_angle < 150:
+                    Top_ROM_error = False
+                    Bottom_ROM_error = False
+                    phase = "P1"  # Up
+                elif angle <= 65:
+                    phase = "P3"  # Bottom
+                elif angle < prev_angle and angle < 150 and angle > 65:
+                    phase = "P2"  # going down
+                elif angle > prev_angle and angle < 150 and angle > 65:
+                    phase = "P4"  # going up
+
+                # Range of Motion Checks
+
+                #1) Check for incomplete bottom range
+                if prev_angle is not None:
+                    if phase == "P2" and  prev_phase == "P4":
+                        viable_rep = False
+                        Bottom_ROM_error = True
+
+                # 2) Check for incomplete top range
+                if phase == "P4" and  prev_phase == "P2":
+                    viable_rep = False
+                    Top_ROM_error = True
                 # Rep detection (Top → Rest)
-                if prev_phase == "LR4" and phase == "LR1":
+                if prev_phase == "P4" and phase == "P1":
                     if viable_rep:
                         rep_counter += 1
                         print(f"Rep completed! Total reps: {rep_counter}")
@@ -362,13 +379,15 @@ while True:
                 if not pose_detected:
                     form_status = "No Pose Detected"
                     status_color = (0, 165, 255)
+                elif Top_ROM_error:
+                    form_status = "Go up more!"
+                    status_color = (0, 0, 255)
+                elif Top_ROM_error:
+                    form_status = "Go Down more!"
+                    status_color = (0, 0, 255)
                 elif reconstruction_error > ANOMALY_THRESHOLD:
                     viable_rep = False
                     form_status = "POOR FORM!"
-                    status_color = (0, 0, 255)
-                elif angle >= 100:
-                    viable_rep = False
-                    form_status = "Only lift to shoulder height!"
                     status_color = (0, 0, 255)
                 else:
                     form_status = "Good Form"
