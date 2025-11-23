@@ -338,12 +338,12 @@ while True:
                 if prev_angle is not None:
                     if phase == "P2" and  prev_phase == "P4":
                         viable_rep = False
-                        Bottom_ROM_error = True
+                        Top_ROM_error = True
 
                 # 2) Check for incomplete top range
                 if phase == "P4" and  prev_phase == "P2":
                     viable_rep = False
-                    Top_ROM_error = True
+                    Bottom_ROM_error = True
                 # Rep detection (Top → Rest)
                 if prev_phase == "P4" and phase == "P1":
                     if viable_rep:
@@ -382,7 +382,7 @@ while True:
                 elif Top_ROM_error:
                     form_status = "Go up more!"
                     status_color = (0, 0, 255)
-                elif Top_ROM_error:
+                elif Bottom_ROM_error:
                     form_status = "Go Down more!"
                     status_color = (0, 0, 255)
                 elif reconstruction_error > ANOMALY_THRESHOLD:
