@@ -220,7 +220,7 @@ pose_detected = False
 rep_counter = 0
 prev_angle = None
 prev_phase = None
-phase = "S1"
+phase = "LR1"
 viable_rep = True
 
 while True:
