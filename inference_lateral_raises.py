@@ -13,7 +13,7 @@ SCALER_PATH = r"pose_scaler_lateral_raises.pkl"
 
 WINDOW_SIZE = 30
 NUM_FEATURES = 54  # Upper body: 14 landmarks × 3 (x,y,visibility) + 14 angles = 42 + 12
-ANOMALY_THRESHOLD = 0.815
+ANOMALY_THRESHOLD = 0.82
 
 # Utility Functions
 def calculate_angle(a, b, c):
@@ -351,19 +351,6 @@ while True:
                         viable_rep = False
                         form_status = "Wrist higher than elbow!"
                         status_color = (0, 0, 255)
-                elif angle > 30:
-                    if angles[2] > 170 or angles[3] > 170:
-                        viable_rep = False
-                        form_status = "Slightly bend elbow"
-                        status_color = (0, 0, 255)
-                    elif angles[2] < 140 or angles[3] < 140:
-                        viable_rep = False
-                        form_status = "Arms bent too much"
-                        status_color = (0, 0, 255)
-                #elif angle >= 100:
-                 #   viable_rep = False
-                 #   form_status = "Only lift to shoulder height!" # wrist condiion already activates for this test
-                  #  status_color = (0, 0, 255)
                 else:
                     form_status = "Good Form"
                     status_color = (0, 255, 0)
