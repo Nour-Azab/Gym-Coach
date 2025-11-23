@@ -239,6 +239,8 @@ prev_angle = None
 prev_phase = None
 phase = "S1"
 viable_rep = True
+Top_ROM_error = False
+Bottom_ROM_error = False
 
 while True:
     success, frame = cap.read()
@@ -293,9 +295,6 @@ while True:
                 landmarks_dict[f'{name}_visibility'],
                 
             ])
-
-     
-
         ################################################ 
 
         # Anomaly detection
@@ -305,16 +304,31 @@ while True:
                 if prev_angle is None:
                     prev_angle = angle
 
-                if angle <= 30 and prev_angle > 30:
-                    phase = "LR1"  # Rest
-                elif angle >= 75:
-                    phase = "LR3"  # Top
-                elif angle > prev_angle and angle < 75 and angle > 30:
-                    phase = "LR2"  # going up
-                elif angle < prev_angle and angle < 75 and angle > 30:
-                    phase = "LR4"  # going down
+                if angle >= 160 and prev_angle < 160:
+                    Top_ROM_error = False
+                    Bottom_ROM_error = False
+                    phase = "B1"  # Rest
+                elif angle <= 60:
+                    phase = "B3"  # Top
+                elif angle < prev_angle and angle < 160 and angle > 60:
+                    phase = "B2"  # going up
+                elif angle > prev_angle and angle < 160 and angle > 60:
+                    phase = "B4"  # going down
+
+                # Range of Motion Checks
+
+                # 1) Check for incomplete bottom extension
+                if prev_angle is not None:
+                    if phase == "B2" and  prev_phase == "B4":
+                        viable_rep = False
+                        Bottom_ROM_error = True
+
+                # 2) Check for weak contraction at the top
+                if phase == "B4" and  prev_phase == "B2":
+                    viable_rep = False
+                    Top_ROM_error = True
                 # Rep detection (Top → Rest)
-                if prev_phase == "LR4" and phase == "LR1":
+                if prev_phase == "B4" and phase == "B1":
                     if viable_rep:
                         rep_counter += 1
                         print(f"Rep completed! Total reps: {rep_counter}")
@@ -352,17 +366,22 @@ while True:
                     viable_rep = False
                     form_status = "POOR FORM!"
                     status_color = (0, 0, 255)
-                elif angle >= 100:
-                    viable_rep = False
-                    form_status = "Only lift to shoulder height!"
+                    #if angles[4] > 25:  # upper_arm_torso_angle
+                        #We only flag this if the arm is actually lifting (not at the bottom resting)
+                     #   if angles[0] < 140: # elbow_flexion_angle
+                      #      form_status = "Keep elbows pinned to your side!"
+                       #     status_color = (0, 0, 255)
+                elif Bottom_ROM_error:
+                    form_status = "Extend your arms more!"
+                    status_color = (0, 0, 255)
+                elif Top_ROM_error:
+                    form_status = "Contract your arms more!"
                     status_color = (0, 0, 255)
                 else:
                     form_status = "Good Form"
                     status_color = (0, 255, 0)
         except Exception as e:
             print(f"Inference error: {e}")
-            form_status = "Error"
-            status_color = (0, 165, 255)
 
     # Display UI
     overlay = frame.copy()
@@ -384,7 +403,7 @@ while True:
     if show_angles:
         cv2.putText(frame, "[Angles: ON]", (w - 130, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
-    cv2.imshow("Lateral Raise Form Analysis", frame)
+    cv2.imshow("Biceps Curl Form Analysis", frame)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
