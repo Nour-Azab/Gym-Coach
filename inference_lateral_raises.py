@@ -180,12 +180,12 @@ def analyze_frame(frame, model, scaler, threshold, device, buffer, window_size, 
         if rep_state['prev_phase'] is not None:
             if rep_state['phase'] == "LR4" and rep_state['prev_phase'] == "LR2":
                 rep_state['viable_rep'] = False
-                rep_state['Bottom_ROM_error'] = True
+                rep_state['Top_ROM_error'] = True
 
         # 2) Check for incomplete range at bottom (didn't lower enough)
         if rep_state['phase'] == "LR2" and rep_state['prev_phase'] == "LR4":
             rep_state['viable_rep'] = False
-            rep_state['Top_ROM_error'] = True
+            rep_state['Bottom_ROM_error'] = True
 
         # Rep detection (Going down → Rest)
         if rep_state['prev_phase'] == "LR4" and rep_state['phase'] == "LR1":

@@ -13,7 +13,7 @@ SCALER_PATH = r"pose_scaler_lateral_raises.pkl"
 
 WINDOW_SIZE = 30
 NUM_FEATURES = 54  # Upper body: 14 landmarks × 3 (x,y,visibility) + 14 angles = 42 + 12
-ANOMALY_THRESHOLD = 0.82
+ANOMALY_THRESHOLD = 0.84
 
 # Utility Functions
 def calculate_angle(a, b, c):
@@ -295,12 +295,12 @@ while True:
                 if prev_angle is not None:
                     if phase == "LR4" and  prev_phase == "LR2":
                         viable_rep = False
-                        Bottom_ROM_error = True
+                        Top_ROM_error = True
 
                 # 2) Check for weak contraction at the top
                 if phase == "LR2" and  prev_phase == "LR4":
                     viable_rep = False
-                    Top_ROM_error = True
+                    Bottom_ROM_error = True
                 # Rep detection (Top → Rest)
                 if prev_phase == "LR4" and phase == "LR1":
                     if viable_rep:
