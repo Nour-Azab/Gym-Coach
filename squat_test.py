@@ -361,6 +361,9 @@ while True:
                     viable_rep = False
                     form_status = "Don't Arch Your Back!"
                     status_color = (0, 0, 255) 
+                else:
+                    form_status = "Normal Form!"
+                    status_color = (0, 0, 255)
             else:
                 form_status = "Normal Form"
                 status_color = (0, 255, 0)  # Green
