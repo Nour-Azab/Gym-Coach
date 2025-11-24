@@ -357,11 +357,7 @@ while True:
                 form_status = "Not Going Low Enough!"
                 status_color = (0, 0, 255) 
             elif angle < 160:
-                if angles[4] > 125:
-                    viable_rep = False
-                    form_status = "Don't Lift Your Heels!"
-                    status_color = (0, 0, 255) 
-                elif angles[3] > 50:
+                if angles[3] > 50:
                     viable_rep = False
                     form_status = "Don't Arch Your Back!"
                     status_color = (0, 0, 255) 

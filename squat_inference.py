@@ -236,10 +236,7 @@ def analyze_frame(frame, model, scaler, threshold, device, buffer, window_size, 
             torso_angle = angles[3]
             ankle_angle = angles[4]
             
-            if ankle_angle > 125:
-                 rep_state['viable_rep'] = False
-                 status = "Don't Lift Your Heels!"
-            elif torso_angle > 50:
+            if torso_angle > 50:
                  rep_state['viable_rep'] = False
                  status = "Don't Arch Your Back!"
             else:
