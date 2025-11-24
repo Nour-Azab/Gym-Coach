@@ -351,6 +351,10 @@ while True:
                         viable_rep = False
                         form_status = "Wrist higher than elbow!"
                         status_color = (0, 0, 255)
+                    else:
+                        form_status = "Good Form"
+                        status_color = (0, 255, 0)
+
                 else:
                     form_status = "Good Form"
                     status_color = (0, 255, 0)
