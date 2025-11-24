@@ -46,7 +46,7 @@ LANDMARK_NAMES = [
     'LEFT_WRIST', 'RIGHT_WRIST', 'LEFT_PINKY', 'RIGHT_PINKY',
     'LEFT_INDEX', 'RIGHT_INDEX', 'LEFT_THUMB', 'RIGHT_THUMB',
     'LEFT_HIP', 'RIGHT_HIP', 'LEFT_KNEE', 'RIGHT_KNEE',
-    'LEFT_ANKLE', 'RIGHT_ANKLE','LEFT_FOOT', 'RIGHT_FOOT',
+    'LEFT_ANKLE', 'RIGHT_ANKLE','LEFT_FOOT_INDEX', 'RIGHT_FOOT_INDEX',
     'LEFT_HEEL', 'RIGHT_HEEL'
 
 ]
@@ -64,8 +64,8 @@ LANDMARK_INDICES = {
     'LEFT_WRIST': 15, 'RIGHT_WRIST': 16, 'LEFT_PINKY': 17, 'RIGHT_PINKY': 18,
     'LEFT_INDEX': 19, 'RIGHT_INDEX': 20, 'LEFT_THUMB': 21, 'RIGHT_THUMB': 22,
     'LEFT_HIP': 23, 'RIGHT_HIP': 24, 'LEFT_KNEE': 25, 'RIGHT_KNEE': 26,
-    'LEFT_ANKLE': 27, 'RIGHT_ANKLE': 28,'LEFT_FOOT': 29, 'RIGHT_FOOT': 30,
-    'LEFT_HEEL': 31, 'RIGHT_HEEL': 32
+    'LEFT_ANKLE': 27, 'RIGHT_ANKLE': 28,'LEFT_FOOT_INDEX': 31, 'RIGHT_FOOT_INDEX': 32,
+    'LEFT_HEEL': 29, 'RIGHT_HEEL': 30
 }
 
 def extract_angles_from_landmarks(landmarks_dict):
@@ -199,9 +199,9 @@ def analyze_frame(frame, model, scaler, threshold, device, buffer, window_size, 
             rep_state['phase'] = "P1"  # Up position (arms extended)
         elif angle <= 65:
             rep_state['phase'] = "P3"  # Bottom position (arms bent)
-        elif angle < rep_state['prev_angle'] and 65 < angle < 150:
+        elif angle < rep_state['prev_angle'] and angle < 150 and angle > 65:
             rep_state['phase'] = "P2"  # Going down (lowering)
-        elif angle > rep_state['prev_angle'] and 65 < angle < 150:
+        elif angle > rep_state['prev_angle'] and angle < 150 and angle > 65:
             rep_state['phase'] = "P4"  # Going up (pushing)
 
         # Range of Motion Checks
@@ -209,12 +209,12 @@ def analyze_frame(frame, model, scaler, threshold, device, buffer, window_size, 
         if rep_state['prev_phase'] is not None:
             if rep_state['phase'] == "P2" and rep_state['prev_phase'] == "P4":
                 rep_state['viable_rep'] = False
-                rep_state['Bottom_ROM_error'] = True
+                rep_state['Top_ROM_error'] = True
 
         # 2) Check for incomplete top range (didn't extend fully)
         if rep_state['phase'] == "P4" and rep_state['prev_phase'] == "P2":
             rep_state['viable_rep'] = False
-            rep_state['Top_ROM_error'] = True
+            rep_state['Bottom_ROM_error'] = True
 
         # Rep detection (Going up → Top position)
         if rep_state['prev_phase'] == "P4" and rep_state['phase'] == "P1":
