@@ -18,12 +18,6 @@ Our goal is to give everyone a **smart, accessible, and real-time** coaching too
 
 ---
 
-Here is the **updated Section 2 (Data Collection)** with your new addition about collecting videos from your friends using mobile phones — written clearly, respectfully, and professionally.
-
-You can replace the old Section 2 with this one.
-
----
-
 ## 2️⃣ Data Collection
 
 To train Coachy’s models, we needed high-quality videos of people performing each exercise **correctly and consistently**.
