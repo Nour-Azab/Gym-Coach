@@ -170,9 +170,9 @@ def analyze_frame(frame, model, scaler, threshold, device, buffer, window_size, 
             rep_state['phase'] = "LR1"  # Rest position (arms down)
         elif angle >= 75:
             rep_state['phase'] = "LR3"  # Top position (arms raised)
-        elif angle > rep_state['prev_angle'] and 30 < angle < 75:
+        elif angle > rep_state['prev_angle'] and angle < 75 and angle > 30:
             rep_state['phase'] = "LR2"  # Going up (raising arms)
-        elif angle < rep_state['prev_angle'] and 30 < angle < 75:
+        elif angle < rep_state['prev_angle'] and angle < 75 and angle > 30:
             rep_state['phase'] = "LR4"  # Going down (lowering arms)
 
         # Range of Motion Checks
@@ -228,6 +228,8 @@ def analyze_frame(frame, model, scaler, threshold, device, buffer, window_size, 
                 landmarks_dict['LEFT_WRIST_y'] < landmarks_dict['LEFT_ELBOW_y']):
                 rep_state['viable_rep'] = False
                 status = "Wrist higher than elbow!"
+            else:
+                status = "Good Form"
         else:
             status = "Good Form"
 
