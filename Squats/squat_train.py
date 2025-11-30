@@ -286,9 +286,7 @@ num_features = X_train.shape[2]
 model = TransformerAutoencoder(num_features, seq_len).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 criterion = nn.MSELoss()
-print("lllllllllllllllllllllllllllllllllllllllllllllll")
-print(num_features)
-print(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
+
 
 BEST_MODEL_PATH = r"best_transformer_autoencoder_squats.pth"
 SCALER_PATH = r"pose_scaler_squats.pkl"
@@ -329,7 +327,7 @@ for epoch in range(30):
     if v < best_val:
         torch.save(model.state_dict(), BEST_MODEL_PATH)
         best_val = v
-        print("🔥 Saved BEST model")
+        print("Saved BEST model")
 
 
 # Save final model + scaler
