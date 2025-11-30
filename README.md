@@ -16,6 +16,12 @@ Coachy currently supports **four core exercises**:
 
 Our goal is to give everyone a **smart, accessible, and real-time** coaching tool without needing any equipment or special setup.
 
+### `Website`
+
+You can access the live system here:
+
+Website: [https://coachyfit.web.app/trainee/dashboard]
+
 ---
 
 ## 2️⃣ Data Collection
