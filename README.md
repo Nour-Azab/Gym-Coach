@@ -46,8 +46,7 @@ To make sure the model sees the **same distribution of camera angles, lighting, 
 * Ensured that the videos matched the typical conditions users will have (home, normal lighting, normal camera distance)
 
 This step was **crucial**, because it helped the model generalize to real users — not just professional studio footage.
-Special thanks to all our friends who helped us build a more robust and realistic dataset ❤️.Sure — here are **clean, professional dataset summary tables for *each model*** (each exercise).
-You can paste this directly into your README under the “Data Collection” or “Feature Engineering” section.
+`Special thanks to all our friends who helped us build a more robust and realistic dataset ❤️`.
 
 ---
 
