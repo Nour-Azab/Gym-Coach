@@ -31,7 +31,7 @@ def calculate_angle(a, b, c):
 # Add angles + detect active arm
 # =================================================================
 
-def add_biceps_curl_angles(df):
+def add_Pushup_angles(df):
     df = df.copy()
 
     elbow_flexion_angle = []
@@ -166,7 +166,7 @@ file_path = r"pushups_data_all.csv"
 
 df = pd.read_csv(file_path)
 
-df = add_biceps_curl_angles(df)
+df = add_Pushup_angles(df)
 df = df[[
     "video_name", "frame",
 
